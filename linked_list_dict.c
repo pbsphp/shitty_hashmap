@@ -6,7 +6,8 @@
 /**
  * Malloc. Exit on failure.
  */
-void *safe_malloc(size_t size)
+static inline void *
+safe_malloc(size_t size)
 {
     void *ptr = malloc(size);
     if (ptr == NULL) {
@@ -21,7 +22,8 @@ void *safe_malloc(size_t size)
 /**
  * Simple hash function for strings.
  */
-unsigned int hash_function(const char *str)
+static inline unsigned int
+hash_function(const char *str)
 {
     unsigned int result = 42;
     char p;
@@ -74,7 +76,8 @@ struct dict
 /**
  * Is entry matches.
  */
-int _is_entry_matches(
+static inline int
+_is_entry_matches(
     struct dict_entry entry, unsigned int hash, const char *key)
 {
     return entry.hash == hash && strcmp(entry.key, key) == 0;
@@ -84,7 +87,8 @@ int _is_entry_matches(
 /**
  * Create array for dictionary entries with given size.
  */
-struct dict_entry **_create_array(size_t size)
+static inline struct dict_entry **
+_create_array(size_t size)
 {
     struct dict_entry **new_array = safe_malloc(
         sizeof(struct dict_entry *) * size);
@@ -99,7 +103,8 @@ struct dict_entry **_create_array(size_t size)
 /**
  * Remove array with dictionary entries and free memory.
  */
-void _delete_array(struct dict_entry **entries_array, size_t length)
+static inline void
+_delete_array(struct dict_entry **entries_array, size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
         struct dict_entry *entry = entries_array[i];
@@ -117,7 +122,8 @@ void _delete_array(struct dict_entry **entries_array, size_t length)
 /**
  * Move dictionary entries from `src_array' to `dst_array'.
  */
-void _move_array(
+static void
+_move_array(
     struct dict_entry **src_array,
     size_t src_size,
     struct dict_entry **dst_array,
@@ -144,7 +150,8 @@ void _move_array(
 /**
  * Resize `entries_array' to `new_size' size.
  */
-void _do_resize_array(struct dict *d, size_t new_size)
+static void
+_do_resize_array(struct dict *d, size_t new_size)
 {
     struct dict_entry **new_array = _create_array(new_size);
     _move_array(
@@ -171,7 +178,8 @@ void _do_resize_array(struct dict *d, size_t new_size)
 /**
  * Resize `entries_array' if needed.
  */
-void _resize_array_if_needed(struct dict *d)
+static void
+_resize_array_if_needed(struct dict *d)
 {
     size_t min_size = d->len * 3 / 2;
     size_t max_size = d->len * 5;
@@ -183,7 +191,6 @@ void _resize_array_if_needed(struct dict *d)
         }
         if (d->array_allocated != optimal_size) {
             _do_resize_array(d, optimal_size);
-
         }
     }
 }
@@ -192,7 +199,8 @@ void _resize_array_if_needed(struct dict *d)
 /**
  * Create new dictionary object.
  */
-struct dict *dict_init()
+struct dict *
+dict_init()
 {
     struct dict *d = safe_malloc(sizeof(struct dict));
     d->len = 0;
@@ -207,7 +215,8 @@ struct dict *dict_init()
 /**
  * Destroy dictionary object.
  */
-void dict_destroy(struct dict *d)
+void
+dict_destroy(struct dict *d)
 {
     _delete_array(d->entries_array, d->array_allocated);
     free(d);
@@ -217,7 +226,8 @@ void dict_destroy(struct dict *d)
 /**
  * Get value by key.
  */
-const char *dict_get(struct dict *d, const char *key)
+const char *
+dict_get(struct dict *d, const char *key)
 {
     unsigned int hash = hash_function(key);
     unsigned int position = hash % d->array_allocated;
@@ -238,7 +248,8 @@ const char *dict_get(struct dict *d, const char *key)
 /**
  * Set value by key.
  */
-void dict_set(struct dict *d, const char *key, const char *value)
+void
+dict_set(struct dict *d, const char *key, const char *value)
 {
     unsigned int hash = hash_function(key);
     unsigned int position = hash % d->array_allocated;
@@ -277,7 +288,8 @@ void dict_set(struct dict *d, const char *key, const char *value)
 /**
  * Remove item by key.
  */
-void dict_del(struct dict *d, const char *key)
+void
+dict_del(struct dict *d, const char *key)
 {
     unsigned int hash = hash_function(key);
     unsigned int position = hash % d->array_allocated;
@@ -307,7 +319,8 @@ void dict_del(struct dict *d, const char *key)
 }
 
 
-void _draw(struct dict *d)
+static void
+_draw(struct dict *d)
 {
     for (size_t i = 0; i < d->array_allocated; ++i) {
         struct dict_entry *entry = d->entries_array[i];

@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 
 /**
  * Malloc. Exit on failure.
  */
-void *safe_malloc(size_t size)
+static inline void *
+safe_malloc(size_t size)
 {
     void *ptr = malloc(size);
     if (ptr == NULL) {
@@ -22,7 +24,8 @@ void *safe_malloc(size_t size)
 /**
  * Realloc. Exit on failure.
  */
-void *safe_realloc(void *mem, size_t size)
+static inline void *
+safe_realloc(void *mem, size_t size)
 {
     void *ptr = realloc(mem, size);
     if (ptr == NULL) {
@@ -37,7 +40,8 @@ void *safe_realloc(void *mem, size_t size)
 /**
  * Simple hash function for strings.
  */
-unsigned int hash_function(const char *str)
+static inline unsigned int
+hash_function(const char *str)
 {
     unsigned int result = 42;
     char p;
@@ -68,7 +72,7 @@ struct dict_entry
     unsigned int hash;
     const char *key;
     const char *value;
-    int is_alive;
+    bool is_alive;
 };
 
 
@@ -95,7 +99,8 @@ struct dict
 /**
  * Return value of Nth item from given index array.
  */
-int _index_array_get(void *arr, size_t item_size, int idx)
+static inline int
+_index_array_get(void *arr, size_t item_size, int idx)
 {
     int res;
     switch (item_size) {
@@ -119,7 +124,8 @@ int _index_array_get(void *arr, size_t item_size, int idx)
 /**
  * Set value of Nth item of given index array.
  */
-void _index_array_set(void *arr, size_t item_size, int idx, int value)
+static inline void
+_index_array_set(void *arr, size_t item_size, int idx, int value)
 {
     switch (item_size) {
     case sizeof(int8_t):
@@ -140,7 +146,8 @@ void _index_array_set(void *arr, size_t item_size, int idx, int value)
 /**
  * Allocate new index array.
  */
-void *_index_array_init(size_t size, size_t item_size)
+static inline void *
+_index_array_init(size_t size, size_t item_size)
 {
     void *arr = safe_malloc(size * item_size);
 
@@ -156,37 +163,18 @@ void *_index_array_init(size_t size, size_t item_size)
 /**
  * Destroy index array.
  */
-void _index_array_destroy(void *arr)
+static inline void
+_index_array_destroy(void *arr)
 {
     free(arr);
 }
 
 
 /**
- * Resize array items.
- *
- * Creates new array with same length, but other item size. For example:
- * replace index array of int8_t to int16_t and vice versa.
- */
-void *_index_array_resize_items(
-    void *arr, size_t arr_size, size_t old_item_size, size_t new_item_size)
-{
-    void *new_arr = _index_array_init(arr_size, new_item_size);
-    for (size_t i = 0; i < arr_size; ++i) {
-        int val = _index_array_get(arr, old_item_size, i);
-        _index_array_set(new_arr, new_item_size, i, val);
-    }
-
-    _index_array_destroy(arr);
-
-    return new_arr;
-}
-
-
-/**
  * Allocate entries array.
  */
-struct dict_entry *_entries_array_init(size_t size)
+static inline struct dict_entry *
+_entries_array_init(size_t size)
 {
     return safe_malloc(sizeof(struct dict_entry) * size);
 }
@@ -195,7 +183,8 @@ struct dict_entry *_entries_array_init(size_t size)
 /**
  * Destroy entries array.
  */
-void _entries_array_destroy(struct dict_entry *arr)
+static inline void
+_entries_array_destroy(struct dict_entry *arr)
 {
     free(arr);
 }
@@ -204,8 +193,8 @@ void _entries_array_destroy(struct dict_entry *arr)
 /**
  * Is entry matches.
  */
-int _is_entry_matches(
-    struct dict_entry entry, unsigned int hash, const char *key)
+static inline bool
+_is_entry_matches(struct dict_entry entry, unsigned int hash, const char *key)
 {
     return (entry.hash == hash && strcmp(entry.key, key) == 0);
 }
@@ -214,7 +203,8 @@ int _is_entry_matches(
 /**
  * Return size of index array item by entries array size.
  */
-size_t _get_index_array_item_size_by_entries_array_size(size_t size)
+static inline size_t
+_get_index_array_item_size_by_entries_array_size(size_t size)
 {
     size_t index_array_item_size;
     if (size <= INT8_MAX) {
@@ -234,7 +224,8 @@ size_t _get_index_array_item_size_by_entries_array_size(size_t size)
 /**
  * Rebuild index array. May change array size and item sizes.
  */
-void _rebuild_index_array(struct dict *d)
+static void
+_rebuild_index_array(struct dict *d)
 {
     size_t index_array_item_size = \
         _get_index_array_item_size_by_entries_array_size(
@@ -268,7 +259,8 @@ void _rebuild_index_array(struct dict *d)
 /**
  * Recreate entries array. Useful when there are a lot of deleted items.
  */
-void _recreate_entries_array(struct dict *d)
+static void
+_recreate_entries_array(struct dict *d)
 {
     // TODO: Optimize: compress without recreation and copying.
 
@@ -299,7 +291,8 @@ void _recreate_entries_array(struct dict *d)
 /**
  * Check is time to rebuild index array.
  */
-int _is_time_to_rebuild_index(struct dict *d)
+static inline bool
+_is_time_to_rebuild_index(struct dict *d)
 {
     size_t index_array_item_size = \
         _get_index_array_item_size_by_entries_array_size(
@@ -319,7 +312,8 @@ int _is_time_to_rebuild_index(struct dict *d)
 /**
  * Check is time to shrink entries array.
  */
-int _is_time_to_shrink_entries_array(struct dict *d)
+static inline bool
+_is_time_to_shrink_entries_array(struct dict *d)
 {
     return (
         d->entries_array_size > (d->len * 3) ||
@@ -331,7 +325,8 @@ int _is_time_to_shrink_entries_array(struct dict *d)
 /**
  * Grow `entries_array'.
  */
-void _grow_entries_array(struct dict *d)
+static inline void
+_grow_entries_array(struct dict *d)
 {
     size_t new_size;
     if (d->entries_array_size > 4096) {
@@ -353,7 +348,8 @@ void _grow_entries_array(struct dict *d)
 /**
  * Return pointer to entry (or NULL) by position in index.
  */
-struct dict_entry *_get_entry_by_index_pos(struct dict *d, int index_pos)
+static inline struct dict_entry *
+_get_entry_by_index_pos(struct dict *d, int index_pos)
 {
     struct dict_entry *entry = NULL;
     int index_val = _index_array_get(
@@ -451,7 +447,7 @@ void dict_set(struct dict *d, const char *key, const char *value)
 
         int new_entry_pos = d->entries_array_size++;
         entry = &d->entries_array[new_entry_pos];
-        entry->is_alive = 1;
+        entry->is_alive = true;
         ++d->len;
 
         _index_array_set(
@@ -461,7 +457,7 @@ void dict_set(struct dict *d, const char *key, const char *value)
             new_entry_pos);
     } else if (!entry->is_alive) {
         ++d->len;
-        entry->is_alive = 1;
+        entry->is_alive = true;
     }
 
     entry->hash = hash;
@@ -490,7 +486,7 @@ void dict_del(struct dict *d, const char *key)
 
     if (entry != NULL && entry->is_alive) {
         --d->len;
-        entry->is_alive = 0;
+        entry->is_alive = false;
 
         if (_is_time_to_shrink_entries_array(d)) {
             _recreate_entries_array(d);
@@ -501,7 +497,7 @@ void dict_del(struct dict *d, const char *key)
 }
 
 
-void _draw(struct dict *d)
+static void _draw(struct dict *d)
 {
     printf("Index ");
     switch(d->index_array_item_size) {

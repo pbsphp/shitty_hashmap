@@ -6,7 +6,8 @@
 /**
  * Malloc. Exit on failure.
  */
-void *safe_malloc(size_t size)
+static inline void *
+safe_malloc(size_t size)
 {
     void *ptr = malloc(size);
     if (ptr == NULL) {
@@ -21,7 +22,8 @@ void *safe_malloc(size_t size)
 /**
  * Simple hash function for strings.
  */
-unsigned int hash_function(const char *str)
+static inline unsigned int
+hash_function(const char *str)
 {
     unsigned int result = 42;
     char p;
@@ -77,7 +79,8 @@ struct dict
 /**
  * Is entry matches.
  */
-int _is_entry_matches(
+static inline int
+_is_entry_matches(
     struct dict_entry entry, unsigned int hash, const char *key)
 {
     return (
@@ -91,7 +94,8 @@ int _is_entry_matches(
 /**
  * Resize `entries_array' to `new_size' size.
  */
-void _do_resize_array(struct dict *d, size_t new_size)
+static void
+_do_resize_array(struct dict *d, size_t new_size)
 {
     struct dict_entry *new_array = safe_malloc(
         sizeof(struct dict_entry) * new_size);
@@ -123,7 +127,8 @@ void _do_resize_array(struct dict *d, size_t new_size)
 /**
  * Resize `entries_array' if needed.
  */
-void _resize_array_if_needed(struct dict *d)
+static void
+_resize_array_if_needed(struct dict *d)
 {
     size_t min_size = d->len * 3 / 2;
     size_t max_size = d->len * 5;
@@ -144,7 +149,8 @@ void _resize_array_if_needed(struct dict *d)
 /**
  * Create new dictionary object.
  */
-struct dict *dict_init()
+struct dict *
+dict_init()
 {
     struct dict *d = safe_malloc(sizeof(struct dict));
     d->len = 0;
@@ -162,7 +168,8 @@ struct dict *dict_init()
 /**
  * Destroy dictionary object.
  */
-void dict_destroy(struct dict *d)
+void
+dict_destroy(struct dict *d)
 {
     free(d->entries_array);
     free(d);
@@ -172,7 +179,8 @@ void dict_destroy(struct dict *d)
 /**
  * Get value by key.
  */
-const char *dict_get(struct dict *d, const char *key)
+const char *
+dict_get(struct dict *d, const char *key)
 {
     unsigned int hash = hash_function(key);
     unsigned int expected_position = hash % d->array_allocated;
@@ -195,7 +203,8 @@ const char *dict_get(struct dict *d, const char *key)
 /**
  * Set value by key.
  */
-void dict_set(struct dict *d, const char *key, const char *value)
+void
+dict_set(struct dict *d, const char *key, const char *value)
 {
     unsigned int hash = hash_function(key);
     unsigned int expected_position = hash % d->array_allocated;
@@ -223,7 +232,8 @@ void dict_set(struct dict *d, const char *key, const char *value)
 /**
  * Remove item by key.
  */
-void dict_del(struct dict *d, const char *key)
+void
+dict_del(struct dict *d, const char *key)
 {
     unsigned int hash = hash_function(key);
     unsigned int expected_position = hash % d->array_allocated;
@@ -244,7 +254,8 @@ void dict_del(struct dict *d, const char *key)
 }
 
 
-void _draw(struct dict *d)
+static void
+_draw(struct dict *d)
 {
     for (size_t i = 0; i < d->array_allocated; ++i) {
         struct dict_entry *entry = &d->entries_array[i];
