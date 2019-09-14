@@ -198,7 +198,7 @@ dict_del(struct dict *d, const char *key)
 
     struct dict_entry *entry = &d->entries_array[expected_position];
     while (!_is_entry_matches(*entry, hash, key) &&
-            entry->kind == ENTRY_OK) {
+            entry->kind != ENTRY_EMPTY) {
         expected_position = (expected_position + 1) % d->array_allocated;
         entry = &d->entries_array[expected_position];
     }
