@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "compact_dict.h"
+
 
 /**
  * Malloc. Exit on failure.
@@ -37,24 +39,6 @@ safe_realloc(void *mem, size_t size)
 }
 
 
-/**
- * Simple hash function for strings.
- */
-static inline unsigned int
-hash_function(const char *str)
-{
-    unsigned int result = 42;
-    char p;
-    unsigned int n = 0;
-    while ((p = *str++)) {
-        result += ((unsigned int) p) << (n++ % 48);
-        result += (unsigned int) p;
-    }
-
-    return result;
-}
-
-
 // Allocate at least `DICT_MIN_ARRAY_SIZE' cells for entries array and index
 // array.
 #define DICT_MIN_ARRAY_SIZE 8
@@ -62,41 +46,6 @@ hash_function(const char *str)
 
 // Index value for empty items.
 #define ENTRY_EMPTY -1
-
-
-/**
- * One dict item.
- */
-struct dict_entry
-{
-    unsigned int hash;
-    const char *key;
-    const char *value;
-    bool is_alive;
-};
-
-
-/**
- * Dictionary object.
- */
-struct dict
-{
-    struct dict_entry *entries_array;
-    void *index_array;
-    size_t index_array_size;
-    size_t index_array_item_size;
-
-    // Number of dictionary entries.
-    size_t len;
-
-    // `entries_array' size (without free slots).
-    size_t entries_array_size;
-    // `entries_array' full size (icluding free slots).
-    size_t entries_array_allocated;
-
-    // Hash function
-    unsigned int (*hash_function)(const char *);
-};
 
 
 /**
@@ -507,8 +456,11 @@ dict_del(struct dict *d, const char *key)
 }
 
 
-static void
-_draw(struct dict *d)
+/**
+ * Draw dict contents for debugging.
+ */
+void
+dict_draw(struct dict *d)
 {
     printf("Index ");
     switch(d->index_array_item_size) {
@@ -552,53 +504,4 @@ _draw(struct dict *d)
             printf("-\n");
         }
     }
-}
-
-
-int main()
-{
-    struct dict *d = dict_init(&hash_function);
-
-    for (int i = 0; i < 10000; ++i) {
-        char *key = malloc(sizeof(char) * 10);
-        char *val = malloc(sizeof(char) * 10);
-        sprintf(key, "key%d", i);
-        sprintf(val, "val%d", i);
-
-        dict_set(d, key, val);
-    }
-
-    for (int i = 0; i < 10000; ++i) {
-        char *key = malloc(sizeof(char) * 10);
-        char *val = malloc(sizeof(char) * 10);
-        sprintf(key, "key%d", i);
-        sprintf(val, "val%d", i);
-
-        const char *realval = dict_get(d, key);
-        if (strcmp(val, realval) != 0) {
-            printf("%s: %s expected, %s got.\n", key, val, realval);
-        }
-    }
-
-    for (int i = 0; i < 10000; ++i) {
-        char *key = malloc(sizeof(char) * 10);
-        sprintf(key, "key%d", i);
-
-        dict_del(d, key);
-    }
-
-    dict_set(d, "asdasd", "QWEQWE");
-    dict_set(d, "dsadsa", "EWQEWQ");
-
-    dict_del(d, "nonexisting");
-    dict_del(d, "asdasd");
-
-    _draw(d);
-
-    printf("\nLen: %ld\n", d->len);
-    printf("asdasd=%s, dsadsa=%s\n", dict_get(d, "asdasd"), dict_get(d, "dsadsa"));
-
-    dict_destroy(d);
-
-    return 0;
 }
