@@ -70,6 +70,9 @@ struct dict
     size_t array_allocated;
     // Number of dictionary entries in `entries_array'.
     size_t array_len;
+
+    // Hash function
+    unsigned int (*hash_function)(const char *);
 };
 
 
@@ -200,13 +203,14 @@ _resize_array_if_needed(struct dict *d)
  * Create new dictionary object.
  */
 struct dict *
-dict_init()
+dict_init(unsigned int (*hash_function)(const char *))
 {
     struct dict *d = safe_malloc(sizeof(struct dict));
     d->len = 0;
     d->array_len = 0;
     d->array_allocated = DICT_MIN_ARRAY_SIZE;
     d->entries_array = _create_array(d->array_allocated);
+    d->hash_function = hash_function;
 
     return d;
 }
@@ -229,7 +233,7 @@ dict_destroy(struct dict *d)
 const char *
 dict_get(struct dict *d, const char *key)
 {
-    unsigned int hash = hash_function(key);
+    unsigned int hash = d->hash_function(key);
     unsigned int position = hash % d->array_allocated;
     struct dict_entry *entry = d->entries_array[position];
 
@@ -251,7 +255,7 @@ dict_get(struct dict *d, const char *key)
 void
 dict_set(struct dict *d, const char *key, const char *value)
 {
-    unsigned int hash = hash_function(key);
+    unsigned int hash = d->hash_function(key);
     unsigned int position = hash % d->array_allocated;
     struct dict_entry *entry = d->entries_array[position];
 
@@ -291,7 +295,7 @@ dict_set(struct dict *d, const char *key, const char *value)
 void
 dict_del(struct dict *d, const char *key)
 {
-    unsigned int hash = hash_function(key);
+    unsigned int hash = d->hash_function(key);
     unsigned int position = hash % d->array_allocated;
     struct dict_entry *entry = d->entries_array[position];
     // After entry deletion we shoud restore liked list. `prev_entry' is
@@ -343,7 +347,7 @@ _draw(struct dict *d)
 
 int main()
 {
-    struct dict *d = dict_init();
+    struct dict *d = dict_init(&hash_function);
 
     for (int i = 0; i < 100; ++i) {
         char *key = malloc(sizeof(char) * 100);

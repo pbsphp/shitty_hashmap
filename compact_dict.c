@@ -93,6 +93,9 @@ struct dict
     size_t entries_array_size;
     // `entries_array' full size (icluding free slots).
     size_t entries_array_allocated;
+
+    // Hash function
+    unsigned int (*hash_function)(const char *);
 };
 
 
@@ -367,7 +370,8 @@ _get_entry_by_index_pos(struct dict *d, int index_pos)
 /**
  * Create new dictionary object.
  */
-struct dict *dict_init()
+struct dict *
+dict_init(unsigned int (*hash_function)(const char *))
 {
     struct dict *d = safe_malloc(sizeof(struct dict));
     d->len = 0;
@@ -380,6 +384,8 @@ struct dict *dict_init()
     d->index_array_size = DICT_MIN_ARRAY_SIZE;
     d->index_array_item_size = sizeof(int8_t);
 
+    d->hash_function = hash_function;
+
     return d;
 }
 
@@ -387,7 +393,8 @@ struct dict *dict_init()
 /**
  * Destroy dictionary object.
  */
-void dict_destroy(struct dict *d)
+void
+dict_destroy(struct dict *d)
 {
     _entries_array_destroy(d->entries_array);
     _index_array_destroy(d->index_array);
@@ -398,9 +405,10 @@ void dict_destroy(struct dict *d)
 /**
  * Get value by key.
  */
-const char *dict_get(struct dict *d, const char *key)
+const char *
+dict_get(struct dict *d, const char *key)
 {
-    unsigned int hash = hash_function(key);
+    unsigned int hash = d->hash_function(key);
     unsigned int index_pos = hash % d->index_array_size;
 
     struct dict_entry *entry = _get_entry_by_index_pos(d, index_pos);
@@ -416,9 +424,10 @@ const char *dict_get(struct dict *d, const char *key)
 /**
  * Set value by key.
  */
-void dict_set(struct dict *d, const char *key, const char *value)
+void
+dict_set(struct dict *d, const char *key, const char *value)
 {
-    unsigned int hash = hash_function(key);
+    unsigned int hash = d->hash_function(key);
     unsigned int index_pos = hash % d->index_array_size;
     struct dict_entry *entry = _get_entry_by_index_pos(d, index_pos);
 
@@ -473,9 +482,10 @@ void dict_set(struct dict *d, const char *key, const char *value)
 /**
  * Remove item by key.
  */
-void dict_del(struct dict *d, const char *key)
+void
+dict_del(struct dict *d, const char *key)
 {
-    unsigned int hash = hash_function(key);
+    unsigned int hash = d->hash_function(key);
     unsigned int index_pos = hash % d->index_array_size;
 
     struct dict_entry *entry = _get_entry_by_index_pos(d, index_pos);
@@ -497,7 +507,8 @@ void dict_del(struct dict *d, const char *key)
 }
 
 
-static void _draw(struct dict *d)
+static void
+_draw(struct dict *d)
 {
     printf("Index ");
     switch(d->index_array_item_size) {
@@ -546,7 +557,7 @@ static void _draw(struct dict *d)
 
 int main()
 {
-    struct dict *d = dict_init();
+    struct dict *d = dict_init(&hash_function);
 
     for (int i = 0; i < 10000; ++i) {
         char *key = malloc(sizeof(char) * 10);
